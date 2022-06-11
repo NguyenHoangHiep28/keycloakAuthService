@@ -1,0 +1,9 @@
+server:
+  port: 8081
+
+keycloak:
+  realm: master
+  auth-server-url: http://localhost:8080/auth
+  resource: test
+  public-client: true
+  bearer-only: true
