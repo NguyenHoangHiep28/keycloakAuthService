@@ -5,6 +5,7 @@ import com.example.authenticationservice.dto.request.UserUpdateDTO;
 import com.example.authenticationservice.util.Peggable;
 import com.example.authenticationservice.util.Peggy;
 import com.example.authenticationservice.util.Specifearcation;
+import org.springframework.http.ResponseCookie;
 
 import java.io.IOException;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Optional;
 public interface KeycloakService {
     KeycloakAccessToken login(String username, String password) throws IOException;
     boolean logout(String refreshToken) throws IOException;
+    KeycloakAccessToken refreshToken(String refreshToken) throws IOException;
     void prepareAdminToken() throws IOException;
     boolean save(KeycloakUser keycloakUser) throws IOException;
     Peggy<KeycloakUser> findAll(Specifearcation specifearcation, Peggable pageable) throws IOException;
@@ -23,5 +25,6 @@ public interface KeycloakService {
     boolean update(String id, UserUpdateDTO updateDTO) throws IOException;
     boolean delete(String id) throws IOException; // to soft delete, move to update.
     boolean addClientRoleToUser(String userId, String roleName) throws IOException;
+    ResponseCookie getRefreshTokenCookie(String path,Long maxAge, String refreshToken);
 
 }

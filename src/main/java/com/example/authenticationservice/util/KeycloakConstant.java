@@ -11,4 +11,5 @@ public class KeycloakConstant {
     public static String KEYCLOAK_AUTHENTICATION_HEADER = "Authorization";
     public static String KEYCLOAK_AUTHENTICATION_BEARER = "Bearer";
     public static String KEYCLOAK_CREDENTIAL_GRANT_TYPE = "password";
+    public static String KEYCLOAK_REFRESH_TOKEN_GRANT_TYPE = "refresh_token";
 }

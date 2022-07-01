@@ -11,7 +11,13 @@ import com.example.authenticationservice.util.KeycloakConstant;
 import com.example.authenticationservice.util.Peggable;
 import com.example.authenticationservice.util.Peggy;
 import com.example.authenticationservice.util.Specifearcation;
+import netscape.security.Principal;
+import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import retrofit2.Response;
 
@@ -28,7 +34,6 @@ public class KeycloakServiceImp implements KeycloakService {
     public static final String FORM_REFRESH_TOKEN_KEY = "refresh_token";
     public static final String TRUE_EXACT = "true";
     private static String adminToken;
-    private static String userToken;
 
     @Override
     public KeycloakAccessToken login(String username, String password) throws IOException {
@@ -41,7 +46,7 @@ public class KeycloakServiceImp implements KeycloakService {
                 = RetrofietServiceGenerator.createService(RetrofietUserService.class);
         Response<KeycloakAccessToken> response = service.login(params).execute();
         if (response.isSuccessful()) {
-            userToken = response.body().getAccess_token();
+            String userToken = response.body().getAccess_token();
         }
         KeycloakAccessToken finalResponse = response.body();
         KeycloakUser user = getUserByUsername(username);
@@ -66,6 +71,31 @@ public class KeycloakServiceImp implements KeycloakService {
             return response.body();
         }
         throw new IOException();
+    }
+
+    @Override
+    public ResponseCookie getRefreshTokenCookie(String path, Long maxAge,String refreshToken) {
+        return ResponseCookie.from(FORM_REFRESH_TOKEN_KEY, refreshToken)
+                .maxAge(maxAge) // 7 days
+                .path(path)
+                .httpOnly(true)
+                .build();
+    }
+
+    @Override
+    public KeycloakAccessToken refreshToken(String refreshToken) throws IOException {
+        Map<String, String> params = new HashMap<>();
+        params.put(LOGIN_FORM_CLIENT_ID_KEY, KeycloakConstant.KEYCLOAK_CLIENT_ID);
+        params.put(LOGIN_FORM_GRANT_TYPE_KEY, KeycloakConstant.KEYCLOAK_REFRESH_TOKEN_GRANT_TYPE);
+        params.put(FORM_REFRESH_TOKEN_KEY, refreshToken);
+        RetrofietUserService service
+                = RetrofietServiceGenerator.createService(RetrofietUserService.class);
+        Response<KeycloakAccessToken> response = service.refreshToken(params).execute();
+        if (response.isSuccessful()) {
+//            adminToken = response.body().getAccess_token();
+            return response.body();
+        }
+        return null;
     }
     private KeycloakUser getUserByUsername(String username) throws IOException {
         prepareAdminToken();
@@ -134,6 +164,11 @@ public class KeycloakServiceImp implements KeycloakService {
     @Override
     public Optional<KeycloakUser> findById(String id) throws IOException {
         prepareAdminToken();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if ((authentication instanceof KeycloakAuthenticationToken)) {
+            Object currentUserName = authentication.getPrincipal();
+            System.out.println(currentUserName);
+        }
         RetrofietUserService service
                 = RetrofietServiceGenerator.createService(RetrofietUserService.class, adminToken);
         Response<KeycloakUser> response
@@ -202,6 +237,7 @@ public class KeycloakServiceImp implements KeycloakService {
 //        Response<List<KeyCloakClient>> response = service.findClientByClientID(clientId).execute();
 //        if (!response.isSuccessful()) {
 //            if (response.code() == HttpStatus.UNAUTHORIZED.value()
+
 //                    || response.code() == HttpStatus.FORBIDDEN.value()) {
 //                adminToken = null;
 //            }

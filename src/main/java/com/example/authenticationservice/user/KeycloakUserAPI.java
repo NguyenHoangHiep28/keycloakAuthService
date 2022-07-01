@@ -12,10 +12,12 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
 import java.io.IOException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,21 +27,25 @@ import java.util.Optional;
 @RequestMapping(path = "/api/v1/users")
 @Log4j2
 public class KeycloakUserAPI {
+    private final KeycloakService keycloakService;
 
-    @Autowired
-    KeycloakService keycloakService;
-    @RolesAllowed("app_admin")
+    public KeycloakUserAPI(KeycloakService keycloakService) {
+        this.keycloakService = keycloakService;
+    }
+
+//    @RolesAllowed("app_admin")
+    @RolesAllowed("user")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<Peggy<KeycloakUser>> index() throws IOException {
-        return new ResponseEntity<Peggy<KeycloakUser>>(
+        return new ResponseEntity<>(
                 keycloakService.findAll(null, null),
                 HttpStatus.OK);
     }
 //    @RolesAllowed("admin")
     @RolesAllowed("user")
-    @RequestMapping(method = RequestMethod.GET, path = "/{userId}")
-    public ResponseEntity<KeycloakUser> findUserById(@PathVariable(name = "userId") String userId) throws IOException {
-        Optional<KeycloakUser> user = keycloakService.findById(userId);
+    @RequestMapping(method = RequestMethod.GET, path = "/info")
+    public ResponseEntity<KeycloakUser> findUserById(Authentication authentication) throws IOException {
+        Optional<KeycloakUser> user = keycloakService.findById(authentication.getPrincipal().toString());
         if (user.isPresent()){
             return ResponseEntity.ok(user.get());
         }else {

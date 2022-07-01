@@ -21,6 +21,10 @@ public interface RetrofietUserService {
     @POST("/auth/realms/master/protocol/openid-connect/logout")
     Call<Void> logout(@FieldMap Map<String, String> params);
 
+    @FormUrlEncoded
+    @POST("/auth/realms/master/protocol/openid-connect/token")
+    Call<KeycloakAccessToken> refreshToken(@FieldMap Map<String,String> params);
+
     @POST("/auth/admin/realms/master/users")
     Call<Void> save(@Body KeycloakUser keycloakUser);
 
@@ -53,7 +57,5 @@ public interface RetrofietUserService {
 
     @POST("/auth/admin/realms/master/users/{userId}/role-mappings/realm")
     Call<KeycloakRole> addRealmRoleToUser(@Path("userId") String userId);
-
-
 
 }
